@@ -3,6 +3,7 @@ import { HexagonCell, HexagonCellData } from "./types";
 import { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
 declare const _default: import("vue/types/vue").ExtendedVue<Vue, any, {
     onDragging(event: PinchScrollZoomEmitData): void;
+    doSetVisibles(floatLeft: number, floatRight: number, floatTop: number, floatBottom: number): void;
     onScaling(event: PinchScrollZoomEmitData): void;
     submitCenter(): void;
     submitSize(): void;
@@ -40,5 +41,7 @@ declare const _default: import("vue/types/vue").ExtendedVue<Vue, any, {
     scale: number;
     autoCenter: boolean;
     draggable: boolean;
+    scrollZoomThrottleDelay: number;
+    renderThrottleDelay: number;
 }>;
 export default _default;

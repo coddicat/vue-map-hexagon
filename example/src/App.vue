@@ -16,6 +16,8 @@
     <button @click="onGotoCell()">Goto cell</button>
     <input v-model="centerX" type="number" style="width: 50px" />
     <input v-model="centerY" type="number" style="width: 50px" />
+    <br/>
+    <br/>
     <MapHexagon
       ref="map"
       :width="340"
@@ -32,7 +34,7 @@
       @click="onClick"
     >
     </MapHexagon>
-    <p>
+    <p style="width: 340px">
       {{ eventName }}:<br />
       {{ eventData }}
     </p>
@@ -69,7 +71,7 @@ function generateCells(left: number, right: number): HexagonCell[] {
         row: row,
         col: col,
         index: index,
-        hexagonClass: "hexagon-custom ",
+        hexagonClass: "hexagon-custom",
         borderSize: 1,
         borderColor: undefined,
         backgroundColor: rndColor,
@@ -113,11 +115,3 @@ export default Vue.extend({
   },
 });
 </script>
-<style lang="scss">
-.hexagon-custom {
-  opacity: 0.8;
-  &:hover {
-    opacity: 1;
-  }
-}
-</style>

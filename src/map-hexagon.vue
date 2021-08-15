@@ -6,7 +6,7 @@
     :within="within"
     :content-width="contentWidth"
     :content-height="contentHeight"
-    :throttle-delay="40"
+    :throttle-delay="scrollZoomThrottleDelay"
     @scaling="onScaling"
     @dragging="onDragging"
     :scale="scale"
@@ -54,6 +54,8 @@ import PinchScrollZoom from "@coddicat/vue-pinch-scroll-zoom";
 import { HexagonCell, HexagonCellData } from "./types";
 import { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
 import Hexagon from "@coddicat/vue-hexagon";
+import { throttle } from "lodash";
+
 const angle = (Math.PI / 180) * 60;
 
 export default /*#__PURE__*/ Vue.extend({
@@ -149,6 +151,14 @@ export default /*#__PURE__*/ Vue.extend({
       type: Boolean,
       default: true,
     },
+    scrollZoomThrottleDelay: {
+      type: Number,
+      default: 40,
+    },
+    renderThrottleDelay: {
+      type: Number,
+      default: 200,
+    },
   },
   mounted() {
     this.draggingListener = !!this.$listeners.dragging;
@@ -191,6 +201,10 @@ export default /*#__PURE__*/ Vue.extend({
       visibleBottom: 0,
       draggingListener: false,
       scalingListener: false,
+      setVisibles: throttle(
+        (this as any).doSetVisibles,
+        this.renderThrottleDelay
+      ),
     };
   },
   computed: {
@@ -278,18 +292,27 @@ export default /*#__PURE__*/ Vue.extend({
       const scaleFactorX = scale * this.xfactor;
       const floatLeft = (originX * scale - event.x - originX) / scaleFactorX;
       const floatRight = floatLeft + this.width / scaleFactorX;
-      this.visibleLeft = Math.floor(floatLeft) + this.xRange[0] - 1;
-      this.visibleRight = Math.floor(floatRight) + this.xRange[0];
 
       const scaleFactorY = scale * this.yfactor * 2;
       const floatTop = (originY * scale - event.y - originY) / scaleFactorY;
       const floatBottom = floatTop + this.height / scaleFactorY;
-      this.visibleTop = Math.floor(floatTop) + this.yRange[0] - 1;
-      this.visibleBottom = Math.floor(floatBottom) + this.yRange[0];
 
       if (this.draggingListener) {
         this.$emit("dragging", event);
       }
+
+      this.setVisibles(floatLeft, floatRight, floatTop, floatBottom);
+    },
+    doSetVisibles(
+      floatLeft: number,
+      floatRight: number,
+      floatTop: number,
+      floatBottom: number
+    ) {
+      this.visibleLeft = Math.floor(floatLeft) + this.xRange[0] - 1;
+      this.visibleRight = Math.floor(floatRight) + this.xRange[0];
+      this.visibleTop = Math.floor(floatTop) + this.yRange[0] - 1;
+      this.visibleBottom = Math.floor(floatBottom) + this.yRange[0];
     },
     onScaling(event: PinchScrollZoomEmitData): void {
       this.onDragging(event);
