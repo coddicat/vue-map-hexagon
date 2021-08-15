@@ -1,0 +1,51 @@
+{
+  "name": "@coddicat/vue-map-hexagon",
+  "version": "1.0.0",
+  "description": "Vue component that shows map/grid of hexagons and provides content scrolling and zooming",
+  "author": "Rodion Shlomo Solomonyk",
+  "homepage": "https://github.com/coddicat/vue-map-hexagon",
+  "license": "MIT",
+  "keywords": [
+    "vue",
+    "hexagon",
+    "map",
+    "grid",
+    "zoom",
+    "scale",
+    "drag",
+    "move"
+  ],
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "main": "lib/index.js",
+  "module": "lib/index.esm.js",
+  "files": [
+    "lib/*"
+  ],
+  "types": "lib/index.d.ts",
+  "peerDependencies": {
+    "vue": "^2.6.11",
+    "vue-class-component": "^7.2.3",
+    "vue-property-decorator": "^8.4.2"
+  },
+  "devDependencies": {
+    "vue": "^2.6.11",
+    "sass-loader": "^10.1.1",
+    "vue-class-component": "^7.2.3",
+    "vue-property-decorator": "^8.4.2",
+    "@rollup/plugin-commonjs": "^14.0.0",
+    "@rollup/plugin-node-resolve": "^8.4.0",
+    "@vue/compiler-sfc": "^3.0.7",
+    "rollup": "^2.23.1",
+    "rollup-plugin-peer-deps-external": "^2.2.3",
+    "rollup-plugin-typescript2": "^0.27.2",
+    "rollup-plugin-vue": "^5.1.6",
+    "typescript": "^3.9.7",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "dependencies": {
+    "@coddicat/vue-hexagon": "^1.2.1",
+    "@coddicat/vue-pinch-scroll-zoom": "^3.0.0"
+  }
+}

@@ -1,0 +1,44 @@
+import Vue from "vue";
+import { HexagonCell, HexagonCellData } from "./types";
+import { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
+declare const _default: import("vue/types/vue").ExtendedVue<Vue, any, {
+    onDragging(event: PinchScrollZoomEmitData): void;
+    onScaling(event: PinchScrollZoomEmitData): void;
+    submitCenter(): void;
+    submitSize(): void;
+    submitScale(): void;
+    getXcenter(): number;
+    getYcenter(): number;
+    getXposition(col: number): number;
+    getYposition(col: number, row: number): number;
+    getPositionStyles(col: number, row: number): any;
+}, {
+    getMapStyles: any;
+    radius: number;
+    xfactor: number;
+    yfactor: number;
+    xOffset: number;
+    contentWidth: number;
+    yOffset: number;
+    contentHeight: number;
+    _cells: (HexagonCell | HexagonCellData)[];
+    _minScale: number;
+    _maxScale: number;
+}, {
+    cells: unknown[];
+    width: number;
+    height: number;
+    xRange: unknown[];
+    yRange: unknown[];
+    itemSize: number;
+    itemsGap: number;
+    within: boolean;
+    zoom: boolean;
+    minScale: number;
+    maxScale: number;
+    center: unknown[];
+    scale: number;
+    autoCenter: boolean;
+    draggable: boolean;
+}>;
+export default _default;
