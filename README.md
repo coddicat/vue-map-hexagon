@@ -11,6 +11,11 @@ https://vue-map-hexagon.coddicat.com/
 npm i @coddicat/vue-map-hexagon
 ```
 
+## Dependencies
+The component uses following external components:
+- <a href="https://github.com/coddicat/vue-pinch-scroll-zoom">@coddicat/vue-pinch-scroll-zoom</a>
+- <A href="https://github.com/coddicat/vue-hexagon">@coddicat/vue-hexagon</a>
+
 ## Usage without slot with cells prop
 template:
 ```
