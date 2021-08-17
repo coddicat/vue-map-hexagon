@@ -18,7 +18,7 @@ The component uses following external components:
 
 ## Usage without slot with cells prop
 template:
-```
+```html
   <MapHexagon
     :item-size="100"
     :items-gap="5"
@@ -31,7 +31,7 @@ template:
 ```
 
 script:
-```
+```ts
   import MapHexagon, { HexagonCell } from "@coddicat/vue-map-hexagon";
   
   //get array of cells
@@ -74,7 +74,7 @@ script:
 ## Usage with a slot and with component <a href="https://github.com/coddicat/vue-hexagon">@coddicat/vue-hexagon</a> 
 (can be replaced with whatever you want)
 template:
-```
+```html
   <HexagonMap
       :scale="scale"
       :center="center"
@@ -97,7 +97,7 @@ template:
 ```
 
 script:
-```
+```ts
   import MapHexagon from "@coddicat/vue-map-hexagon";
   import Hexagon from "@coddicat/vue-hexagon";
   
@@ -150,7 +150,7 @@ the following properties don't support the ".async" modifier
 - click //click on hexagon when used cells prop
 
 ## Methods
-```
+```ts
 .submitCenter(); //when changed center prop or goto centered cell
 .submitSize(); //when changed width and height props
 .submitScale(); //when changed scale prop or restore scale with the value
