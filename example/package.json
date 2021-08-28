@@ -1,6 +1,6 @@
 {
   "name": "@coddicat/vue-map-hexagon-example",
-  "version": "1.0.0",
+  "version": "3.2.0",
   "description": "Vue component that shows map/grid of hexagons and provides content scrolling and zooming",
   "author": "Rodion Shlomo Solomonyk",
   "homepage": "https://github.com/coddicat/vue-map-hexagon",
@@ -12,7 +12,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@coddicat/vue-map-hexagon": "3.1.0",
+    "@coddicat/vue-map-hexagon": "3.2.0",
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",

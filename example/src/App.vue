@@ -42,20 +42,8 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import MapHexagon, { HexagonCell } from "@coddicat/vue-map-hexagon";
-
-interface IData {
-  eventName: string | undefined;
-  eventData: any;
-  within: boolean;
-  draggable: boolean;
-  zoom: boolean;
-  center: number[] | undefined;
-  centerX: number;
-  centerY: number;
-  cells: Array<any>;
-}
+import { Component, Vue } from "vue-property-decorator";
+import MapHexagon, { HexagonCell } from "@coddicat/vue-map-hexagon"; // "../../lib/index";
 
 function generateCells(left: number, right: number): HexagonCell[] {
   const cells = Array<HexagonCell>();
@@ -86,32 +74,34 @@ function generateCells(left: number, right: number): HexagonCell[] {
   return cells;
 }
 
-export default Vue.extend({
+@Component({
+  name: "MapHexagonExample",
   components: {
-    MapHexagon,
+    MapHexagon
   },
-  data: (): IData => ({
-    eventName: undefined,
-    eventData: undefined,
-    within: true,
-    draggable: true,
-    zoom: true,
-    center: undefined,
-    centerX: 47,
-    centerY: -45,
-    cells: generateCells(-50, 50),
-  }),
-  methods: {
-    onClick(cell: HexagonCell) {
+})
+export default class MapHexagonExample extends Vue {
+    private eventName = '';
+    private eventData = '';
+    private within = true;
+    private draggable = true;
+    private zoom = true;
+    private center = [0, 0];
+    private centerX = 47;
+    private centerY = -45;
+    private cells: HexagonCell[] = generateCells(-50, 50);
+
+    public onClick(cell: HexagonCell): void {
       alert(`Clicked #${cell.index}`);
-    },
-    onEvent(eventName: string, eventData: any) {
+    }
+    public onEvent(eventName: string, eventData: any): void {
       this.eventName = eventName;
       this.eventData = eventData;
-    },
-    onGotoCell() {
+    }
+    public onGotoCell(): void {
       this.center = [this.centerX, this.centerY];
-    },
-  },
-});
+      const map = this.$refs.map as any;
+      map.submitCenter();
+    }
+}
 </script>

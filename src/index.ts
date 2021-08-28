@@ -1,5 +1,3 @@
-  
 import MapHexagon from "./map-hexagon.vue";
-import { HexagonCell } from "./types";
-export { HexagonCell }
+export { HexagonCell, HexagonCellData } from "./types";
 export default MapHexagon;
