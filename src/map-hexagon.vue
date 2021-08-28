@@ -14,7 +14,7 @@
     :max-scale="_maxScale"
     :draggable="draggable"
   >
-    <div class="map-hexagon" :style="getMapStyles">
+    <div class="map-hexagon" :style="mapStyles">
       <div
         v-for="cell in _cells"
         :key="cell.index"
@@ -49,118 +49,96 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import PinchScrollZoom from "@coddicat/vue-pinch-scroll-zoom";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+
 import { HexagonCell, HexagonCellData } from "./types";
-import { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
+import PinchScrollZoom, { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
 import Hexagon from "@coddicat/vue-hexagon";
-import { throttle } from "lodash";
+import { throttle, DebouncedFunc } from "lodash";
 
 const angle = (Math.PI / 180) * 60;
 
-export default /*#__PURE__*/ Vue.extend({
+@Component({
   name: "MapHexagon",
   components: {
     PinchScrollZoom,
     Hexagon,
   },
-  props: {
-    cells: {
-      type: Array,
-      required: false,
-      default: undefined,
-    },
-    width: {
-      type: Number,
-      default: 400,
-    },
-    height: {
-      type: Number,
-      default: 400,
-    },
-    xRange: {
-      type: Array,
-      default(): number[] {
-        if (!this.cells) {
-          return [-5, 5];
-        }
-        const arr = this.cells.map((x: HexagonCell) => x.col);
-        const min = Math.min.apply(null, arr);
-        const max = Math.max.apply(null, arr);
+})
+export default class MapHexagon extends Vue {
+  @Prop({ required: false, default: undefined }) private cells: HexagonCell[] | undefined;
+  @Prop({ required: false, default: 400 }) private width!: number;
+  @Prop({ required: false, default: 400 }) private height!: number;
+  @Prop({
+    required: false,
+    default(): number[] {
+      const that = this as MapHexagon;
+      if (!that.cells) {
+        return [-5, 5];
+      }
+      const arr = that.cells.map((x: HexagonCell) => x.col);
+      const min = Math.min.apply(null, arr);
+      const max = Math.max.apply(null, arr);
 
-        return [min, max];
-      },
+      return [min, max];
     },
-    yRange: {
-      type: Array,
-      default(): number[] {
-        if (!this.cells) {
-          return [-5, 5];
-        }
-        const arr = this.cells.map((x: any) => x.row);
-        const min = Math.min.apply(null, arr);
-        const max = Math.max.apply(null, arr);
+  })
+  private xRange!: number[];
 
-        return [min, max];
-      },
-    },
-    itemSize: {
-      type: Number,
-      default: 100,
-    },
-    itemsGap: {
-      type: Number,
-      default: 5,
-    },
-    within: {
-      type: Boolean,
-      default: false,
-    },
-    zoom: {
-      type: Boolean,
-      default: true,
-    },
-    minScale: {
-      type: Number,
-      default: 0.6,
-    },
-    maxScale: {
-      type: Number,
-      default: 3,
-    },
-    center: {
-      type: Array,
-      default(): Array<number> {
-        const xRange = this.xRange as Array<number>;
-        const yRange = this.yRange as Array<number>;
+  @Prop({
+    required: false,
+    default(): number[] {
+      const that = this as MapHexagon;
+      if (!that.cells) {
+        return [-5, 5];
+      }
+      const arr = that.cells.map(x => x.row);
+      const min = Math.min.apply(null, arr);
+      const max = Math.max.apply(null, arr);
 
-        const x = Math.floor((xRange[0] + xRange[1]) / 2);
-        const y = Math.floor((yRange[0] + yRange[1]) / 2);
-        return [x, y];
-      },
+      return [min, max];
     },
-    scale: {
-      type: Number,
-      default: 1,
+  })
+  private yRange!: number[];
+
+  @Prop({ required: false, default: 100 }) private itemSize!: number;
+  @Prop({ required: false, default: 5 }) private itemsGap!: number;
+  @Prop({ required: false, default: false }) private within!: boolean;
+  @Prop({ required: false, default: true }) private zoom!: boolean;
+  @Prop({ required: false, default: 0.6 }) private minScale!: number;
+  @Prop({ required: false, default: 3 }) private maxScale!: number;
+
+  @Prop({
+    required: false,
+    default(): number[] {
+      const that = this as MapHexagon;
+      const xRange = that.xRange as Array<number>;
+      const yRange = that.yRange as Array<number>;
+
+      const x = Math.floor((xRange[0] + xRange[1]) / 2);
+      const y = Math.floor((yRange[0] + yRange[1]) / 2);
+      return [x, y];
     },
-    autoCenter: {
-      type: Boolean,
-      default: true,
-    },
-    draggable: {
-      type: Boolean,
-      default: true,
-    },
-    scrollZoomThrottleDelay: {
-      type: Number,
-      default: 40,
-    },
-    renderThrottleDelay: {
-      type: Number,
-      default: 200,
-    },
-  },
-  mounted() {
+  })
+  private center!: number[];
+
+  @Prop({ required: false, default: 1 }) private scale!: number;
+  @Prop({ required: false, default: true }) private autoCenter!: boolean;
+  @Prop({ required: false, default: true }) private draggable!: boolean;
+  @Prop({ required: false, default: 40 }) private scrollZoomThrottleDelay!: number;
+  @Prop({ required: false, default: 200 }) private renderThrottleDelay!: number;
+
+  private currentScale: number = this.scale;
+  private visibleLeft: number = 0;
+  private visibleTop: number = 0;
+  private visibleRight: number = 0;
+  private visibleBottom: number = 0;
+  private draggingListener: boolean = false;
+  private scalingListener: boolean = false;
+  private setVisibles: DebouncedFunc<any> = throttle(this.doSetVisibles, this.renderThrottleDelay);
+
+
+  mounted(): void {
     this.draggingListener = !!this.$listeners.dragging;
     this.scalingListener = !!this.$listeners.scaling;
 
@@ -178,245 +156,235 @@ export default /*#__PURE__*/ Vue.extend({
       };
       this.onDragging(event);
     }
-  },
-  watch: {
-    center() {
-      if (this.autoCenter) {
-        this.submitCenter();
-      }
-    },
-    height() {
-      this.submitSize();
-    },
-    width() {
-      this.submitSize();
-    },
-  },
-  data(): any {
-    return {
-      currentScale: this.scale,
-      visibleLeft: 0,
-      visibleTop: 0,
-      visibleRight: 0,
-      visibleBottom: 0,
-      draggingListener: false,
-      scalingListener: false,
-      setVisibles: throttle(
-        (this as any).doSetVisibles,
-        this.renderThrottleDelay
-      ),
-    };
-  },
-  computed: {
-    getMapStyles(): any {
-      return { transform: `translate(${-this.xOffset}px, ${-this.yOffset}px)` };
-    },
-    radius(): number {
-      return this.itemSize / 2 + this.itemsGap;
-    },
-    xfactor(): number {
-      return this.radius * Math.cos(angle) + this.radius;
-    },
-    yfactor(): number {
-      return this.radius * Math.sin(angle);
-    },
-    xOffset(): number {
-      const cnx = this.getXposition(this.xRange[0]);
-      return cnx - this.radius;
-    },
-    contentWidth(): number {
-      const res =
-        (this.xRange[1] - this.xRange[0] + 1) * this.xfactor + this.radius / 2;
-      return res;
-    },
-    yOffset(): number {
-      const cny = this.getYposition(0, this.yRange[0]);
-      return cny - this.yfactor;
-    },
-    contentHeight(): number {
-      const res =
-        (this.yRange[1] - this.yRange[0] + 1) * this.yfactor * 2 + this.yfactor;
-      return res;
-    },
-    _cells(): Array<HexagonCell | HexagonCellData> {
-      const cols = this.xRange[1] - this.xRange[0] + 1;
-      const cells = [];
+  }
 
-      const top =
-        this.yRange[0] > this.visibleTop ? this.yRange[0] : this.visibleTop;
+  @Watch("center")
+  centerChanged() {
+    if (this.autoCenter) {
+      this.submitCenter();
+    }
+  }
+  
+  @Watch("height")
+  heightChanged() {
+    this.submitSize();
+  }
 
-      const bottom =
-        this.yRange[1] < this.visibleBottom
-          ? this.yRange[1]
-          : this.visibleBottom;
+  @Watch("height")
+  widthChanged() {
+    this.submitSize();
+  }
 
-      const left =
-        this.xRange[0] > this.visibleLeft ? this.xRange[0] : this.visibleLeft;
+  get mapStyles(): object {
+    return { transform: `translate(${-this.xOffset}px, ${-this.yOffset}px)` };
+  }
+  get radius(): number {
+    return this.itemSize / 2 + this.itemsGap;
+  }
+  get xfactor(): number {
+    return this.radius * Math.cos(angle) + this.radius;
+  }
+  get yfactor(): number {
+    return this.radius * Math.sin(angle);
+  }
+  get xOffset(): number {
+    const cnx = this.getXposition(this.xRange[0]);
+    return cnx - this.radius;
+  }
+  get contentWidth(): number {
+    const res =
+      (this.xRange[1] - this.xRange[0] + 1) * this.xfactor + this.radius / 2;
+    return res;
+  }
+  get yOffset(): number {
+    const cny = this.getYposition(0, this.yRange[0]);
+    return cny - this.yfactor;
+  }
+  get contentHeight(): number {
+    const res =
+      (this.yRange[1] - this.yRange[0] + 1) * this.yfactor * 2 + this.yfactor;
+    return res;
+  }
+  get _cells(): Array<HexagonCell | HexagonCellData> {
+    const cols = this.xRange[1] - this.xRange[0] + 1;
+    const cells = [];
 
-      const right =
-        this.xRange[1] < this.visibleRight ? this.xRange[1] : this.visibleRight;
+    const top =
+      this.yRange[0] > this.visibleTop ? this.yRange[0] : this.visibleTop;
 
-      if (this.cells) {
-        return this.cells.filter(
-          (x: HexagonCell) =>
-            x.row >= top && x.row <= bottom && x.col >= left && x.col <= right
-        );
-      }
+    const bottom =
+      this.yRange[1] < this.visibleBottom
+        ? this.yRange[1]
+        : this.visibleBottom;
 
-      for (let row = top; row <= bottom; row++) {
-        for (let col = left; col <= right; col++) {
-          const cell: HexagonCellData = {
-            index: row * cols + col,
-            col,
-            row,
-          };
-          cells.push(cell);
-        }
-      }
+    const left =
+      this.xRange[0] > this.visibleLeft ? this.xRange[0] : this.visibleLeft;
 
-      return cells;
-    },
-    _minScale(): number {
-      return this.zoom ? this.minScale : this.maxScale;
-    },
-    _maxScale(): number {
-      return this.zoom ? this.maxScale : this.minScale;
-    },
-  },
-  methods: {
-    onDragging(event: PinchScrollZoomEmitData): void {
-      const scale = event.scale;
-      const originX = event.originX;
-      const originY = event.originY;
+    const right =
+      this.xRange[1] < this.visibleRight ? this.xRange[1] : this.visibleRight;
 
-      const scaleFactorX = scale * this.xfactor;
-      const floatLeft = (originX * scale - event.x - originX) / scaleFactorX;
-      const floatRight = floatLeft + this.width / scaleFactorX;
+    if (this.cells) {
+      return this.cells.filter(
+        (x: HexagonCell) =>
+          x.row >= top && x.row <= bottom && x.col >= left && x.col <= right
+      );
+    }
 
-      const scaleFactorY = scale * this.yfactor * 2;
-      const floatTop = (originY * scale - event.y - originY) / scaleFactorY;
-      const floatBottom = floatTop + this.height / scaleFactorY;
-
-      if (this.draggingListener) {
-        this.$emit("dragging", event);
-      }
-
-      this.setVisibles(floatLeft, floatRight, floatTop, floatBottom);
-    },
-    doSetVisibles(
-      floatLeft: number,
-      floatRight: number,
-      floatTop: number,
-      floatBottom: number
-    ) {
-      this.visibleLeft = Math.floor(floatLeft) + this.xRange[0] - 1;
-      this.visibleRight = Math.floor(floatRight) + this.xRange[0];
-      this.visibleTop = Math.floor(floatTop) + this.yRange[0] - 1;
-      this.visibleBottom = Math.floor(floatBottom) + this.yRange[0];
-    },
-    onScaling(event: PinchScrollZoomEmitData): void {
-      this.onDragging(event);
-      this.currentScale = event.scale;
-      if (this.scalingListener) {
-        this.$emit("scaling", event);
-      }
-    },
-    submitCenter(): void {
-      this.$nextTick(() => {
-        const xCenter = this.getXcenter();
-        const yCenter = this.getYcenter();
-        this.$refs.zoomer.setData({
-          scale: this.currentScale,
-          originX: 0,
-          originY: 0,
-          translateX: xCenter,
-          translateY: yCenter,
-        });
-
-        const event: PinchScrollZoomEmitData = {
-          x: xCenter,
-          y: yCenter,
-          originX: 0,
-          originY: 0,
-          scale: this.currentScale,
-          translateX: 0,
-          translateY: 0,
+    for (let row = top; row <= bottom; row++) {
+      for (let col = left; col <= right; col++) {
+        const cell: HexagonCellData = {
+          index: row * cols + col,
+          col,
+          row,
         };
-        this.onDragging(event);
+        cells.push(cell);
+      }
+    }
+
+    return cells;
+  }
+  get _minScale(): number {
+    return this.zoom ? this.minScale : this.maxScale;
+  }
+  get _maxScale(): number {
+    return this.zoom ? this.maxScale : this.minScale;
+  }
+
+  public onDragging(event: PinchScrollZoomEmitData): void {
+    const scale = event.scale;
+    const originX = event.originX;
+    const originY = event.originY;
+
+    const scaleFactorX = scale * this.xfactor;
+    const floatLeft = (originX * scale - event.x - originX) / scaleFactorX;
+    const floatRight = floatLeft + this.width / scaleFactorX;
+
+    const scaleFactorY = scale * this.yfactor * 2;
+    const floatTop = (originY * scale - event.y - originY) / scaleFactorY;
+    const floatBottom = floatTop + this.height / scaleFactorY;
+
+    if (this.draggingListener) {
+      this.$emit("dragging", event);
+    }
+
+    this.setVisibles(floatLeft, floatRight, floatTop, floatBottom);
+  }
+  public doSetVisibles(
+    floatLeft: number,
+    floatRight: number,
+    floatTop: number,
+    floatBottom: number
+  ) {
+    this.visibleLeft = Math.floor(floatLeft) + this.xRange[0] - 1;
+    this.visibleRight = Math.floor(floatRight) + this.xRange[0];
+    this.visibleTop = Math.floor(floatTop) + this.yRange[0] - 1;
+    this.visibleBottom = Math.floor(floatBottom) + this.yRange[0];
+  }
+  public onScaling(event: PinchScrollZoomEmitData): void {
+    this.onDragging(event);
+    this.currentScale = event.scale;
+    if (this.scalingListener) {
+      this.$emit("scaling", event);
+    }
+  }
+  public submitCenter(): void {
+    this.$nextTick(() => {
+      const xCenter = this.getXcenter();
+      const yCenter = this.getYcenter();
+      const zoomer = this.$refs.zoomer as PinchScrollZoom;
+      zoomer.setData({
+        scale: this.currentScale,
+        originX: 0,
+        originY: 0,
+        translateX: xCenter,
+        translateY: yCenter,
       });
-    },
-    submitSize(): void {
-      const data = this.$refs.zoomer.getEmitData();
+
       const event: PinchScrollZoomEmitData = {
-        x: data.translateX,
-        y: data.translateY,
-        originX: data.originX,
-        originY: data.originY,
-        scale: data.scale,
+        x: xCenter,
+        y: yCenter,
+        originX: 0,
+        originY: 0,
+        scale: this.currentScale,
         translateX: 0,
         translateY: 0,
       };
       this.onDragging(event);
-    },
-    submitScale(): void {
-      this.currentScale = this.scale;
-      const data = this.$refs.zoomer.getEmitData();
-      this.$refs.zoomer.setData({
-        scale: this.scale,
-        originX: data.originX,
-        originY: data.originY,
-        translateX: data.translateX,
-        translateY: data.translateY,
-      });
-    },
-    getXcenter(): number {
-      const scale = this.currentScale;
-      const xfactor = this.xfactor;
+    });
+  }
+  public submitSize(): void {
+    const zoomer = this.$refs.zoomer as PinchScrollZoom;
+    const data = zoomer.getEmitData();
+    const event: PinchScrollZoomEmitData = {
+      x: data.translateX,
+      y: data.translateY,
+      originX: data.originX,
+      originY: data.originY,
+      scale: data.scale,
+      translateX: 0,
+      translateY: 0,
+    };
+    this.onDragging(event);
+  }
+  public submitScale(): void {
+    this.currentScale = this.scale;
+    const zoomer = this.$refs.zoomer as PinchScrollZoom;
+    const data = zoomer.getEmitData();
+    zoomer.setData({
+      scale: this.scale,
+      originX: data.originX,
+      originY: data.originY,
+      translateX: data.translateX,
+      translateY: data.translateY,
+    });
+  }
+  public getXcenter(): number {
+    const scale = this.currentScale;
+    const xfactor = this.xfactor;
 
-      const middle = (this.xRange[0] + this.xRange[1]) / 2;
-      const x = Math.floor(middle);
-      const odd = middle % 1 === 0 ? 0 : 1;
-      const center =
-        ((xfactor * odd - this.contentWidth) * scale + this.width) / 2;
+    const middle = (this.xRange[0] + this.xRange[1]) / 2;
+    const x = Math.floor(middle);
+    const odd = middle % 1 === 0 ? 0 : 1;
+    const center =
+      ((xfactor * odd - this.contentWidth) * scale + this.width) / 2;
 
-      const shift = xfactor * scale * (this.center[0] - x);
-      return center - shift;
-    },
-    getYcenter(): number {
-      const yfactor = this.yfactor;
-      const scale = this.currentScale;
+    const shift = xfactor * scale * (this.center[0] - x);
+    return center - shift;
+  }
+  public getYcenter(): number {
+    const yfactor = this.yfactor;
+    const scale = this.currentScale;
 
-      const center = ((yfactor - this.contentHeight) * scale + this.height) / 2;
-      const middle = (this.yRange[0] + this.yRange[1]) / 2;
-      const y = Math.floor(middle);
+    const center = ((yfactor - this.contentHeight) * scale + this.height) / 2;
+    const middle = (this.yRange[0] + this.yRange[1]) / 2;
+    const y = Math.floor(middle);
 
-      const odd = this.center[0] % 2 == 0 ? 0 : 0.5;
-      const odd_ = middle % 1 === 0 ? 0 : 0.5;
-      const shift = 2 * yfactor * (this.center[1] - y - odd_ + odd) * scale;
-      return center - shift;
-    },
-    getXposition(col: number): number {
-      const nx = col * this.xfactor;
-      const cnx = nx + this.contentWidth / 2;
-      return cnx;
-    },
-    getYposition(col: number, row: number): number {
-      const fy = col % 2 == 0 ? 0 : 0.5;
-      const ny = (row + fy) * this.yfactor * 2;
-      const cny = ny + this.contentHeight / 2;
-      return cny;
-    },
-    getPositionStyles(col: number, row: number): any {
-      const x = this.getXposition(col);
-      const y = this.getYposition(col, row);
+    const odd = this.center[0] % 2 == 0 ? 0 : 0.5;
+    const odd_ = middle % 1 === 0 ? 0 : 0.5;
+    const shift = 2 * yfactor * (this.center[1] - y - odd_ + odd) * scale;
+    return center - shift;
+  }
+  public getXposition(col: number): number {
+    const nx = col * this.xfactor;
+    const cnx = nx + this.contentWidth / 2;
+    return cnx;
+  }
+  public getYposition(col: number, row: number): number {
+    const fy = col % 2 == 0 ? 0 : 0.5;
+    const ny = (row + fy) * this.yfactor * 2;
+    const cny = ny + this.contentHeight / 2;
+    return cny;
+  }
+  public getPositionStyles(col: number, row: number): object {
+    const x = this.getXposition(col);
+    const y = this.getYposition(col, row);
 
-      return {
-        top: `${y}px`,
-        left: `${x}px`,
-      };
-    },
-  },
-});
+    return {
+      top: `${y}px`,
+      left: `${x}px`,
+    };
+  }
+}
 </script>
 
 <style lang="scss">

@@ -30,8 +30,9 @@ template:
   </MapHexagon>
 ```
 
-script:
+type script:
 ```ts
+  import { Component, Vue } from "vue-property-decorator";
   import MapHexagon, { HexagonCell } from "@coddicat/vue-map-hexagon";
   
   //get array of cells
@@ -56,19 +57,19 @@ script:
       }
     return cells;
   }
-      
-  export default Vue.extend({
+
+  @Component({
+    name: "MapHexagonExample",
     components: {
-      MapHexagon,
+      MapHexagon
     },
-    data: () => ({
-      cells: generateCells(),
-    methods: {
-      onClick(cell: HexagonCell) {
-        alert(`Clicked #${cell.index}`);
-      }
-    },
-  });
+  })
+  export default class MapHexagonExample extends Vue {
+    private cells: HexagonCell[] = generateCells();
+    public onClick(cell: HexagonCell): void {
+      alert(`Clicked #${cell.index}`);
+    }
+  }
 ```
 
 ## Usage with a slot and with component <a href="https://github.com/coddicat/vue-hexagon">@coddicat/vue-hexagon</a> 
@@ -93,32 +94,33 @@ template:
         </Hexagon>
       </template>
   </HexagonMap>
-
 ```
 
-script:
+type script:
 ```ts
+  import { Component, Vue } from "vue-property-decorator";
   import MapHexagon from "@coddicat/vue-map-hexagon";
   import Hexagon from "@coddicat/vue-hexagon";
   
-  export default {
+  @Component({
+    name: "MapHexagonExample",
     components: {
-      HexagonMap,
-      Hexagon,
+      MapHexagon,
+      Hexagon
     },
-    data: () => ({
-      scale: 1,
-      center: [3, 3]
-    }),
-    methods: {
-      reset() {
-        this.scale = 1;
-        this.center = [3, 3];
-        this.$refs.map.submitScale();
-        this.$refs.map.submitCenter();
-      },
-    },
-  };  
+  })
+  export default class MapHexagonExample extends Vue {
+    private scale: number = 1;
+    private center: number[] = [3, 3];
+    
+    public reset(): void {
+      this.scale = 1;
+      this.center = [3, 3];
+      const map = this.$refs.map as MapHexagon;
+      map.submitScale();
+      map.submitCenter();
+    }
+  }
 ```
 
 ## Props
