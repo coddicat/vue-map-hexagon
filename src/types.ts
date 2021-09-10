@@ -18,8 +18,8 @@ export interface HexagonCellData {
 }
 
 export interface RangingEmitData {
-    floatLeft: number,
-    floatRight: number,
-    floatTop: number,
-    floatBottom: number
+    visibleLeft: number,
+    visibleRight: number,
+    visibleTop: number,
+    visibleBottom: number
 }

@@ -283,10 +283,10 @@ export default class MapHexagon extends Vue {
     this.visibleBottom = Math.floor(floatBottom) + this.yRange[0];
     if (this.rangingListener) {
       const emitData: RangingEmitData = {
-        floatLeft,
-        floatRight,
-        floatTop,
-        floatBottom
+        visibleLeft: this.visibleLeft,
+        visibleRight: this.visibleRight,
+        visibleTop: this.visibleTop,
+        visibleBottom: this.visibleBottom
       };
       this.$emit("ranging", emitData);
     }
