@@ -150,6 +150,7 @@ the following properties don't support the ".async" modifier
 - dragging
 - scaling
 - click //click on hexagon when used cells prop
+- ranging - on change visible range
 
 ## Methods
 ```ts

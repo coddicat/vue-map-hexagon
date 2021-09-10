@@ -51,7 +51,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 
-import { HexagonCell, HexagonCellData } from "./types";
+import { HexagonCell, HexagonCellData, RangingEmitData } from "./types";
 import PinchScrollZoom, { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
 import Hexagon from "@coddicat/vue-hexagon";
 import { throttle, DebouncedFunc } from "lodash";
@@ -135,12 +135,14 @@ export default class MapHexagon extends Vue {
   private visibleBottom: number = 0;
   private draggingListener: boolean = false;
   private scalingListener: boolean = false;
+  private rangingListener: boolean = false;
   private setVisibles: DebouncedFunc<any> = throttle(this.doSetVisibles, this.renderThrottleDelay);
 
 
   mounted(): void {
     this.draggingListener = !!this.$listeners.dragging;
     this.scalingListener = !!this.$listeners.scaling;
+    this.rangingListener = !!this.$listeners.ranging;
 
     if (this.autoCenter) {
       this.submitCenter();
@@ -279,6 +281,15 @@ export default class MapHexagon extends Vue {
     this.visibleRight = Math.floor(floatRight) + this.xRange[0];
     this.visibleTop = Math.floor(floatTop) + this.yRange[0] - 1;
     this.visibleBottom = Math.floor(floatBottom) + this.yRange[0];
+    if (this.rangingListener) {
+      const emitData: RangingEmitData = {
+        floatLeft,
+        floatRight,
+        floatTop,
+        floatBottom
+      };
+      this.$emit("ranging", emitData);
+    }
   }
   public onScaling(event: PinchScrollZoomEmitData): void {
     this.onDragging(event);

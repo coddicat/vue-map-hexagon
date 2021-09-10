@@ -16,3 +16,10 @@ export interface HexagonCellData {
     row: number,
     col: number,
 }
+
+export interface RangingEmitData {
+    floatLeft: number,
+    floatRight: number,
+    floatTop: number,
+    floatBottom: number
+}

@@ -26,6 +26,7 @@ export default class MapHexagon extends Vue {
     private visibleBottom;
     private draggingListener;
     private scalingListener;
+    private rangingListener;
     private setVisibles;
     mounted(): void;
     centerChanged(): void;
