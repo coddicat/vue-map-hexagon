@@ -54,4 +54,5 @@ export default class MapHexagon extends Vue {
     getXposition(col: number): number;
     getYposition(col: number, row: number): number;
     getPositionStyles(col: number, row: number): object;
+    getIndex(col: number, row: number): number;
 }

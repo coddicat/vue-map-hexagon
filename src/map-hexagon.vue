@@ -208,7 +208,6 @@ export default class MapHexagon extends Vue {
     return res;
   }
   get _cells(): Array<HexagonCell | HexagonCellData> {
-    const cols = this.xRange[1] - this.xRange[0] + 1;
     const cells = [];
 
     const top =
@@ -235,7 +234,7 @@ export default class MapHexagon extends Vue {
     for (let row = top; row <= bottom; row++) {
       for (let col = left; col <= right; col++) {
         const cell: HexagonCellData = {
-          index: row * cols + col,
+          index: this.getIndex(col, row),
           col,
           row,
         };
@@ -394,6 +393,16 @@ export default class MapHexagon extends Vue {
       top: `${y}px`,
       left: `${x}px`,
     };
+  }
+  public getIndex(col: number, row: number): number {
+    if (row == 0 && col == 0) {
+      return 0;
+    }
+    const k = Math.sign(row) || 1;
+    const l = Math.sign(col) || 1;
+    const r = Math.max(Math.abs(col), Math.abs(row));
+    const i = r * (4*r - 2*k - k/l) + l*row - k*col + 1;
+    return i;
   }
 }
 </script>
