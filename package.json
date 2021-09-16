@@ -1,6 +1,6 @@
 {
   "name": "@coddicat/vue-map-hexagon",
-  "version": "3.2.4",
+  "version": "3.3.0",
   "description": "Vue component for displaying a map/grid of hexagons. The component supports scrolling and scaling",
   "author": "Rodion Shlomo Solomonyk",
   "homepage": "https://github.com/coddicat/vue-map-hexagon",
@@ -45,7 +45,7 @@
     "vue-template-compiler": "^2.6.11"
   },
   "dependencies": {
-    "@coddicat/vue-hexagon": "^1.3.0",
+    "@coddicat/vue-hexagon": "^1.3.1",
     "@coddicat/vue-pinch-scroll-zoom": "^3.2.1",
     "@types/lodash": "^4.14.172",
     "lodash": "^4.17.21"

@@ -14,12 +14,12 @@
     :max-scale="_maxScale"
     :draggable="draggable"
   >
-    <div class="map-hexagon" :style="mapStyles">
+    <div class="coddicat_map_hexagon" :style="mapStyles">
       <div
         v-for="cell in _cells"
         :key="cell.index"
         :style="getPositionStyles(cell.col, cell.row)"
-        class="map-hexagon__item"
+        class="coddicat_map_hexagon__item"
       >
         <slot
           :index="cell.index"
@@ -408,10 +408,11 @@ export default class MapHexagon extends Vue {
 </script>
 
 <style lang="scss">
-.map-hexagon {
+.coddicat_map_hexagon {
   &__item {
     position: absolute !important;
     transform: translate(-50%, -50%);
+    pointer-events: none;
   }
 }
 </style>
